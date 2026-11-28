@@ -7,7 +7,6 @@ import {
   removeDigits,
 } from "../practice/string.js";
 
-import type { Patient } from "./patientsCsv.js";
 import { importPatients } from "./patientsCsv.js";
 
 // read the csv file 

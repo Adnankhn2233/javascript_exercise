@@ -1,6 +1,7 @@
 import { readFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
 import { normalisePhone } from "./phone.js";
+import { findDuplicate } from "./duplicate.js";
 
 export type Patient = { name: string; phone: string };
 export type ImportError = { row: number; reason: string };
@@ -48,6 +49,13 @@ export async function importPatients(path: string): Promise<ImportResult> {
         const phone = normalisePhone(row.phone);
         if (phone === null) {
             errors.push({ row: i + 2, reason: "invalid phone" });
+            continue;
+        }
+
+        // check 4: duplicate
+        const duplicate = findDuplicate(patients, { name: row.name, phone });
+        if (duplicate) {
+            errors.push({ row: i + 2, reason: "duplicate patient" });
             continue;
         }
 
