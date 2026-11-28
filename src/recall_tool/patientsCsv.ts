@@ -23,39 +23,40 @@ export async function importPatients(path: string): Promise<ImportResult> {
         skip_empty_lines: true,
         trim: true,
         skip_records_with_error: true,
+        info:true,
         on_skip: (err) => {
             const line = err?.lines;
             const rowNumber = typeof line === "number" ? line : 0;
             errors.push({ row: rowNumber, reason: "wrong number of columns" });
         },
-    }) as CsvRow[];
+    }) as { record: CsvRow; info: { lines: number } }[];
 
     for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
+        const { record: row, info } = rows[i];
 
         // check 1: name
         if (!row.name || row.name.trim() === "") {
-            errors.push({ row: i + 2, reason: "missing name" });
+            errors.push({ row: info.lines, reason: "missing name" });
             continue;
         }
 
         // check 2: phone
         if (!row.phone) {
-            errors.push({ row: i + 2, reason: "missing phone" });
+            errors.push({ row: info.lines, reason: "missing phone" });
             continue;
         }
 
         // check 3: normalisePhone returns null
         const phone = normalisePhone(row.phone);
         if (phone === null) {
-            errors.push({ row: i + 2, reason: "invalid phone" });
+            errors.push({ row: info.lines, reason: "invalid phone" });
             continue;
         }
 
         // check 4: duplicate
         const duplicate = findDuplicate(patients, { name: row.name, phone });
         if (duplicate) {
-            errors.push({ row: i + 2, reason: "duplicate patient" });
+            errors.push({ row: info.lines, reason: "duplicate patient" });
             continue;
         }
 
